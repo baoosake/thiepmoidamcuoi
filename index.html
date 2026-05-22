@@ -58,6 +58,15 @@ height:100%;
 object-fit:cover;
 }
 
+/* TỐI GIẢN VIDEO INTRO TRÊN MOBILE - HIỂN THỊ TOÀN BỘ KHÔNG BỊ MẤT HÌNH */
+@media (max-width: 768px) {
+    #videoIntro video {
+        object-fit: contain;
+        max-width: 100%;
+        max-height: 100%;
+    }
+}
+
 #videoIntro::after {
 content: "Chạm nhẹ để xem thiệp cưới và nghe nhạc ❤️";
 position: absolute;
@@ -345,6 +354,7 @@ transform: scale(1.03);
 box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4);
 }
 
+/* LÀM 2 NÚT MŨI TÊN NHỎ HƠN VÀ ĐẨY RA HAI BÊN RÌA TRÁI PHẢI */
 .lightbox {
 display: none;
 position: fixed;
@@ -818,9 +828,9 @@ Bảo Ân
             Bà: Nguyễn Thị Bình
         </div>
     </div>
-    
+   
     <div class="info-center-and">&</div>
-    
+   
     <div class="info-column">
         <h3>Nhà trai</h3>
         <div class="big-name">Nguyễn Hồng Bảo Ân</div>
@@ -990,41 +1000,43 @@ musicBtn.classList.remove("playing");
 }
 }
 
-/* KHẮC PHỤC LỖI TỰ ĐỘNG TRƯỢT TRÊN PC VÀ TĂNG TỐC ĐỘ */
-let isAutoScrolling = false;
-let scrollSpeed = 2.8; // Tăng vận tốc trượt lên nhanh hơn rõ rệt nhưng vẫn cực kỳ mượt
+/* TỰ ĐỘNG TRƯỢT PHÂN CHIA CHO PC VÀ TỪ TỪ TRÊN MOBILE */
+let autoScrollInterval = null;
+function startAutoScroll() {
+    if (autoScrollInterval) return;
 
-function smoothScrollStep() {
-    if (!isAutoScrolling) return;
+    // Kiểm tra thiết bị mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+                     || (window.innerWidth <= 768) 
+                     || ('ontouchstart' in window);
 
-    // Tiến hành cuộn trang theo trục Y với vận tốc mong muốn
-    window.scrollBy(0, scrollSpeed);
-
-    // Kiểm tra nếu chạm đáy trang web thì dừng hẳn cuộn
-    const isBottomReached = (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 1;
-    if (isBottomReached) {
-        isAutoScrolling = false;
+    if (isMobile) {
+        // CHẾ ĐỘ MOBILE: Trượt cực kỳ từ từ (chỉ nhích 1px mỗi 40ms)
+        autoScrollInterval = setInterval(() => {
+            window.scrollBy(0, 1); 
+            if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 2) {
+                clearInterval(autoScrollInterval);
+            }
+        }, 40); 
     } else {
-        // Tiếp tục vòng lặp đồng bộ với tần số quét (FPS) của màn hình máy tính
-        requestAnimationFrame(smoothScrollStep);
+        // CHẾ ĐỘ MÁY TÍNH (PC): Trượt nhanh, dứt khoát và mượt mà
+        autoScrollInterval = setInterval(() => {
+            window.scrollBy(0, 4); 
+            if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 4) {
+                clearInterval(autoScrollInterval);
+            }
+        }, 25); 
     }
 }
 
-function startAutoScroll() {
-    if (isAutoScrolling) return;
-    isAutoScrolling = true;
-    requestAnimationFrame(smoothScrollStep);
-}
-
 function stopAutoScroll() {
-    isAutoScrolling = false;
+    if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+    }
 }
-
-// Lắng nghe tất cả các thao tác của người dùng trên cả PC & Mobile để nhường quyền cuộn tự nhiên
 window.addEventListener('wheel', stopAutoScroll, { passive: true });
 window.addEventListener('touchstart', stopAutoScroll, { passive: true });
-window.addEventListener('mousedown', stopAutoScroll); // Người dùng click chuột trên PC
-window.addEventListener('keydown', stopAutoScroll);   // Người dùng bấm phím mũi tên/spacebar trên PC
 
 
 /* ĐÓNG INTRO VÀ KÍCH HOẠT HIỆU ỨNG TỰ ĐỘNG CUỘN */
@@ -1055,7 +1067,7 @@ function closeIntroAndScroll(){
         
         setTimeout(()=>{
             intro.remove();
-            startAutoScroll();
+            startAutoScroll(); // Kích hoạt chạy tự động cuộn
         }, 1200);
     }
 }
@@ -1075,7 +1087,7 @@ if(intro) {
 }
 
 
-/* LIGHTBOX ĐIỀU HƯỚNG ẢNH MŨI TÊN NHỎ GỌN */
+/* LIGHTBOX HIỂN THỊ ẢNH */
 const lightbox = document.getElementById("customLightbox");
 const lightboxImg = document.getElementById("lightboxImg");
 const allImages = document.querySelectorAll(".gallery img");
