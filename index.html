@@ -55,7 +55,16 @@ transition: opacity 1.2s ease, transform 1.2s ease;
 #videoIntro video{
 width:100%;
 height:100%;
-object-fit:cover;
+object-fit:cover; /* Mặc định trên máy tính giữ nguyên bao phủ */
+}
+
+/* YÊU CẦU 2: TỐI GIẢN VIDEO INTRO TRÊN MOBILE - HIỂN THỊ TOÀN BỘ KHÔNG BỊ MẤT HÌNH */
+@media (max-width: 768px) {
+    #videoIntro video {
+        object-fit: contain; /* Chuyển sang thu nhỏ vừa vặn khung hình mobile */
+        max-width: 100%;
+        max-height: 100%;
+    }
 }
 
 #videoIntro::after {
@@ -345,6 +354,7 @@ transform: scale(1.03);
 box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4);
 }
 
+/* YÊU CẦU 1: LÀM 2 NÚT MŨI TÊN NHỎ HƠN VÀ ĐẨY RA HAI BÊN RÌA TRÁI PHẢI */
 .lightbox {
 display: none;
 position: fixed;
@@ -370,7 +380,7 @@ height: 100%;
 display: flex;
 justify-content: center;
 align-items: center;
-padding: 0 60px;
+padding: 0 60px; /* Tạo khoảng trống 2 bên rìa để đặt mũi tên không bị chạm hình */
 }
 
 .lightbox img {
@@ -399,6 +409,7 @@ transition: color 0.3s;
 }
 .lightbox .closeBtn:hover { color: white; }
 
+/* Thu nhỏ nút điều hướng và đẩy ra sát 2 bên rìa */
 .lightbox .navBtn {
 position: absolute;
 top: 50%;
@@ -406,8 +417,8 @@ transform: translateY(-50%);
 background: rgba(255, 255, 255, 0.15);
 color: white;
 border: none;
-font-size: 20px;
-width: 44px;
+font-size: 20px; /* Thu nhỏ size mũi tên */
+width: 44px;    /* Đặt khung tròn vừa vặn tinh tế */
 height: 44px;
 cursor: pointer;
 border-radius: 50%;
@@ -420,8 +431,8 @@ align-items: center;
 .lightbox .navBtn:hover { background: rgba(255, 255, 255, 0.35); }
 .lightbox .navBtn:active { transform: translateY(-50%) scale(0.9); }
 
-.lightbox .prevBtn { left: 15px; }
-.lightbox .nextBtn { right: 15px; }
+.lightbox .prevBtn { left: 15px; }  /* Cố định sát rìa trái màn hình */
+.lightbox .nextBtn { right: 15px; } /* Cố định sát rìa phải màn hình */
 
 @media (max-width: 600px) {
 .lightbox-content { padding: 0 45px; }
@@ -818,9 +829,9 @@ Bảo Ân
             Bà: Nguyễn Thị Bình
         </div>
     </div>
-    
+   
     <div class="info-center-and">&</div>
-    
+   
     <div class="info-column">
         <h3>Nhà trai</h3>
         <div class="big-name">Nguyễn Hồng Bảo Ân</div>
@@ -990,41 +1001,32 @@ musicBtn.classList.remove("playing");
 }
 }
 
-/* KHẮC PHỤC LỖI TỰ ĐỘNG TRƯỢT TRÊN PC VÀ TĂNG TỐC ĐỘ */
-let isAutoScrolling = false;
-let scrollSpeed = 2.8; // Tăng vận tốc trượt lên nhanh hơn rõ rệt nhưng vẫn cực kỳ mượt
-
-function smoothScrollStep() {
-    if (!isAutoScrolling) return;
-
-    // Tiến hành cuộn trang theo trục Y với vận tốc mong muốn
-    window.scrollBy(0, scrollSpeed);
-
-    // Kiểm tra nếu chạm đáy trang web thì dừng hẳn cuộn
-    const isBottomReached = (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 1;
-    if (isBottomReached) {
-        isAutoScrolling = false;
-    } else {
-        // Tiếp tục vòng lặp đồng bộ với tần số quét (FPS) của màn hình máy tính
-        requestAnimationFrame(smoothScrollStep);
-    }
-}
-
+/* YÊU CẦU 1: TRÊN MOBILE KHÔNG TỰ ĐỘNG TRƯỢT */
+let autoScrollInterval = null;
 function startAutoScroll() {
-    if (isAutoScrolling) return;
-    isAutoScrolling = true;
-    requestAnimationFrame(smoothScrollStep);
+    // Kiểm tra nếu là thiết bị di động (dựa vào User Agent hoặc kích thước màn hình) thì dừng, không chạy tự động cuộn
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+    if (isMobile) return; 
+
+    if (autoScrollInterval) return;
+   
+    autoScrollInterval = setInterval(() => {
+        window.scrollBy(0, 2);
+       
+        if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 2) {
+            clearInterval(autoScrollInterval);
+        }
+    }, 25); 
 }
 
 function stopAutoScroll() {
-    isAutoScrolling = false;
+    if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+    }
 }
-
-// Lắng nghe tất cả các thao tác của người dùng trên cả PC & Mobile để nhường quyền cuộn tự nhiên
-window.addEventListener('wheel', stopAutoScroll, { passive: true });
-window.addEventListener('touchstart', stopAutoScroll, { passive: true });
-window.addEventListener('mousedown', stopAutoScroll); // Người dùng click chuột trên PC
-window.addEventListener('keydown', stopAutoScroll);   // Người dùng bấm phím mũi tên/spacebar trên PC
+window.addEventListener('wheel', stopAutoScroll);
+window.addEventListener('touchstart', stopAutoScroll);
 
 
 /* ĐÓNG INTRO VÀ KÍCH HOẠT HIỆU ỨNG TỰ ĐỘNG CUỘN */
@@ -1046,13 +1048,13 @@ function closeIntroAndScroll(){
 
     if(intro) {
         intro.classList.add("hide");
-        
+       
         if(music) {
             music.play().then(() => {
                 musicBtn.classList.add("playing");
             }).catch(e => console.log("Chờ tương tác nhạc thực tế"));
         }
-        
+       
         setTimeout(()=>{
             intro.remove();
             startAutoScroll();
@@ -1075,7 +1077,7 @@ if(intro) {
 }
 
 
-/* LIGHTBOX ĐIỀU HƯỚNG ẢNH MŨI TÊN NHỎ GỌN */
+/* LIGHTBOX HIỂN THỊ ẢNH */
 const lightbox = document.getElementById("customLightbox");
 const lightboxImg = document.getElementById("lightboxImg");
 const allImages = document.querySelectorAll(".gallery img");
@@ -1102,7 +1104,7 @@ function changeImage(step) {
     currentImgIndex += step;
     if (currentImgIndex >= allImages.length) currentImgIndex = 0;
     if (currentImgIndex < 0) currentImgIndex = allImages.length - 1;
-    
+   
     lightboxImg.src = allImages[currentImgIndex].src;
 }
 
@@ -1123,12 +1125,12 @@ if (lightbox) {
 /* Vuốt màn hình điện thoại */
 lightbox.addEventListener('touchstart', e => {
     touchStartX = e.changedTouches[0].screenX;
-}, { passive: true });
+}, false);
 
 lightbox.addEventListener('touchend', e => {
     touchEndX = e.changedTouches[0].screenX;
     handleSwipe();
-}, { passive: true });
+}, false);
 
 function handleSwipe() {
     if (touchEndX < touchStartX - 50) {
@@ -1174,23 +1176,23 @@ function sendSMS() {
     const name = document.getElementById("guestName").value.trim();
     const phone = document.getElementById("guestPhone").value.trim();
     const count = document.getElementById("guestCount").value.trim();
-    
+   
     if(!name) {
         alert("Vui lòng điền tên của bạn nhé!");
         return;
     }
-    
+   
     let message = `Xác nhận tham dự đám cưới Bảo Ân & Ánh Ly:\n- Tên khách: ${name}`;
     if(phone) message += `\n- SĐT: ${phone}`;
     if(count) message += `\n- Số người: ${count}`;
-    
+   
     const phoneNumber = "0866660841";
     const encodedMessage = encodeURIComponent(message);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const smsUrl = isIOS
         ? `sms:${phoneNumber}&body=${encodedMessage}`
         : `sms:${phoneNumber}?body=${encodedMessage}`;
-        
+       
     window.location.href = smsUrl;
 }
 </script>
